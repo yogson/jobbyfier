@@ -1,4 +1,4 @@
-from statistics import median, mode
+from statistics import median
 
 from pymongo import MongoClient
 import requests
