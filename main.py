@@ -37,7 +37,7 @@ def download_vacancies(collection, page=0, **kwargs):
         vacancies.insert_one(vacancy)
 
     if page < resp.get('pages', 1)-1:
-        sleep(1)
+        sleep(0.1)
         download_vacancies(db, page=page+1, **kwargs)
 
 
