@@ -48,7 +48,6 @@ def get_salary_averages(vacancies):
         if isinstance(item, dict):
             salaries.append(get_salary(item))
 
-    print('\n')
     print('Медианная зарплата: ', median(salaries))
     print('Средняя: ', sum(salaries)//len(salaries))
 
@@ -72,7 +71,9 @@ def get_salary(vacancy):
             salary = salary_from if salary_from else salary_to
         if salary and currency != 'RUR':
             salary = salary*get_exchange_rates().get('EUR') if currency == 'EUR' \
-                else salary*get_exchange_rates().get('USD')
+                else salary*get_exchange_rates().get('USD') if currency == 'USD' \
+                else salary*get_exchange_rates().get('KZT') if currency == 'KZT' \
+                else None
 
     return salary
 
@@ -81,7 +82,8 @@ def get_exchange_rates():
     """Dummy. Will be improved."""
     return {
         'EUR': 80,
-        'USD': 70
+        'USD': 70,
+        "KZT": 0.17
     }
 
 
