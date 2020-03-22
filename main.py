@@ -90,8 +90,9 @@ def get_exchange_rates():
 
 
 def calculate_all(db):
-    for collection in db.list_collections():
-        get_salary_averages(collection.find())
+    for collection in db.list_collection_names():
+        vacancies = db.db.get_collection(collection).find()
+        get_salary_averages(vacancies)
 
 
 if __name__ == '__main__':
