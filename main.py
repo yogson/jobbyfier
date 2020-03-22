@@ -1,12 +1,12 @@
 from statistics import median
 from time import sleep
+import sys
 
 from pymongo import MongoClient
 import requests
 
 
-def download_vacancies(db, page=0, **kwargs):
-    vacancies = db.vacancies
+def download_vacancies(collection, page=0, **kwargs):
 
     only_with_salary = kwargs.get('only_with_salary', True)
     keyword = kwargs.get('keyword')
@@ -31,7 +31,7 @@ def download_vacancies(db, page=0, **kwargs):
     for vacancy in resp.get('items', []):
         vacancies.insert_one(vacancy)
 
-    while page < resp.get('pages', 0):
+    while page < resp.get('pages', 1)-1:
         resp.pop('items')
         print(resp)
         sleep(1)
@@ -82,6 +82,16 @@ def get_exchange_rates():
     }
 
 
-client = MongoClient()
-db = client.jobs
-download_vacancies(db)
+if __name__ == 'main':
+    if len(sys.argv) != 2:
+        print("Wrong arguments")
+        print("Usage: main.py <search_base>")
+        sys.exit(-1)
+    search_base = sys.argv[1]
+    client = MongoClient()
+    db = client.jobs
+    vacancies = getattr(db, f'vacancies_{search_base}')
+    vacancies.remove({})
+    download_vacancies(vacancies, keyword=search_base)
+
+
