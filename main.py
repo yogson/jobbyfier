@@ -1,4 +1,5 @@
 from statistics import median
+from time import sleep
 
 from pymongo import MongoClient
 import requests
@@ -31,6 +32,9 @@ def download_vacancies(db, page=0, **kwargs):
         vacancies.insert_one(vacancy)
 
     while page < resp.get('pages', 0):
+        resp.pop('items')
+        print(resp)
+        sleep(1)
         download_vacancies(page=page+1, **kwargs)
 
 
