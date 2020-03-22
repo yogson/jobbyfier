@@ -97,16 +97,16 @@ def calculate_all(db):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print("Wrong arguments")
-        print("Usage: main.py <search_base>")
-        sys.exit(-1)
-    search_base = sys.argv[1]
 
     client = MongoClient()
     db = client.jobs
-    vacancies = getattr(db, f'vacancies_{search_base.replace(" ", "_")}')
-    vacancies.delete_many({})
-    download_vacancies(vacancies, keyword=search_base)
+
+    if len(sys.argv) == 2:
+        search_base = sys.argv[1]
+        vacancies = getattr(db, f'vacancies_{search_base.replace(" ", "_")}')
+        vacancies.delete_many({})
+        download_vacancies(vacancies, keyword=search_base)
+    else:
+        calculate_all(db)
 
 
