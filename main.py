@@ -28,12 +28,14 @@ def download_vacancies(collection, page=0, **kwargs):
         params=payload
     ).json()
 
+    print(
+        resp.get('pages')
+    )
+
     for vacancy in resp.get('items', []):
         vacancies.insert_one(vacancy)
 
     while page < resp.get('pages', 1)-1:
-        resp.pop('items')
-        print(resp)
         sleep(1)
         download_vacancies(db, page=page+1, **kwargs)
 
@@ -82,7 +84,7 @@ def get_exchange_rates():
     }
 
 
-if __name__ == 'main':
+if __name__ == '__main__':
     if len(sys.argv) != 2:
         print("Wrong arguments")
         print("Usage: main.py <search_base>")
