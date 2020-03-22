@@ -46,7 +46,9 @@ def get_salary_averages(vacancies):
 
     for item in vacancies:
         if isinstance(item, dict):
-            salaries.append(get_salary(item))
+            salary = get_salary(item)
+            if salary:
+                salaries.append(salary)
 
     print('Медианная зарплата: ', median(salaries))
     print('Средняя: ', sum(salaries)//len(salaries))
