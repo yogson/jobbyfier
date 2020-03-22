@@ -35,7 +35,7 @@ def download_vacancies(db, page=0, **kwargs):
         resp.pop('items')
         print(resp)
         sleep(1)
-        download_vacancies(page=page+1, **kwargs)
+        download_vacancies(db, page=page+1, **kwargs)
 
 
 def get_salary_averages(vacancies):
