@@ -29,7 +29,8 @@ def download_vacancies(collection, page=0, **kwargs):
     ).json()
 
     print(
-        resp.get('pages')
+        'Page: ',
+        resp.get('page')
     )
 
     for vacancy in resp.get('items', []):
@@ -93,7 +94,7 @@ if __name__ == '__main__':
     client = MongoClient()
     db = client.jobs
     vacancies = getattr(db, f'vacancies_{search_base}')
-    vacancies.remove({})
+    vacancies.delete_many({})
     download_vacancies(vacancies, keyword=search_base)
 
 
