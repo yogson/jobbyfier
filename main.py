@@ -89,6 +89,11 @@ def get_exchange_rates():
     }
 
 
+def calculate_all(db):
+    for collection in db.list_collections():
+        get_salary_averages(collection.find())
+
+
 if __name__ == '__main__':
     if len(sys.argv) != 2:
         print("Wrong arguments")
