@@ -89,11 +89,15 @@ def get_exchange_rates():
     }
 
 
-def calculate_all(db):
-    for collection in db.list_collection_names():
-        print(collection.replace('vacancies_', ''))
-        vacancies = db.get_collection(collection).find()
+def calculate_all(db, base=None):
+    if base:
+        vacancies = db.get_collection(base).find()
         get_salary_averages(vacancies)
+    else:
+        for collection in db.list_collection_names():
+            print(collection.replace('vacancies_', ''))
+            vacancies = db.get_collection(collection).find()
+            get_salary_averages(vacancies)
 
 
 if __name__ == '__main__':
@@ -102,10 +106,11 @@ if __name__ == '__main__':
     db = client.jobs
 
     if len(sys.argv) == 2:
-        search_base = sys.argv[1]
-        vacancies = getattr(db, f'vacancies_{search_base.replace(" ", "_")}')
+        search_base = f'vacancies_{sys.argv[1].replace(" ", "_")}'
+        vacancies = getattr(db, search_base)
         vacancies.delete_many({})
-        download_vacancies(vacancies, keyword=search_base)
+        download_vacancies(vacancies, keyword=sys.argv[1])
+        calculate_all(db, base=search_base)
     else:
         calculate_all(db)
 
