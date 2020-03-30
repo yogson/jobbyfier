@@ -23,10 +23,7 @@ def download_vacancies(collection, page=0, **kwargs):
             'text': keyword
         })
 
-    resp = requests.get(
-        f'https://api.hh.ru/vacancies',
-        params=payload
-    ).json()
+    resp = requests.get(f'https://api.hh.ru/vacancies', params=payload).json()
 
     print(
         'Page: ',
@@ -39,6 +36,25 @@ def download_vacancies(collection, page=0, **kwargs):
     if page < resp.get('pages', 1)-1:
         sleep(0.1)
         download_vacancies(db, page=page+1, **kwargs)
+
+
+def download_single(id):
+    payload = {
+        'User-Agent': 'api-agent'
+    }
+    return requests.get(f'https://api.hh.ru/vacancies/{id}', params=payload).json()
+
+
+def get_details(collection):
+    ids = [i['id'] for i in collection.find({}, {'_id': 0, 'id': 1})]
+
+    for id_ in ids:
+        description = download_single(id_).get('description')
+        if description:
+            collection.find_one_and_update(
+                {'id': id_},
+                {'$set': {'description': description}}
+            )
 
 
 def get_salary_averages(vacancies):
@@ -110,6 +126,8 @@ if __name__ == '__main__':
         vacancies = getattr(db, search_base)
         vacancies.delete_many({})
         download_vacancies(vacancies, keyword=sys.argv[1])
+        print('Downloading vacancies details...')
+        get_details(vacancies)
         calculate_all(db, base=search_base)
     else:
         calculate_all(db)
