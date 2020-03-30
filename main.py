@@ -47,8 +47,10 @@ def download_single(id):
 
 def get_details(collection):
     ids = [i['id'] for i in collection.find({}, {'_id': 0, 'id': 1})]
-
+    i=0
     for id_ in ids:
+        i += 1
+        print(i)
         description = download_single(id_).get('description')
         if description:
             collection.find_one_and_update(
