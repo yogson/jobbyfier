@@ -21,11 +21,9 @@ def clean_html(raw_html):
 def get_collection_full_text(collection_name):
     collection = db.get_collection('vacancies_'+collection_name)
     qs = collection.find()
-    i = 20
     full_text = ''
-    while i:
-        full_text += '\n'+clean_html(qs[i].get('description'))
-        i -= 1
+    for vacancy in qs:
+        full_text += '\n'+clean_html(vacancy.get('description'))
     return full_text
 
 
@@ -44,9 +42,6 @@ def get_top_words(text):
     words = [word for word in word_tokenize(df['comm'].str.cat(sep=' '))]
 
     return FreqDist(words)
-
-
-
 
 
 top = get_top_words(get_collection_full_text('python'))
