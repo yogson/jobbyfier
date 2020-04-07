@@ -51,8 +51,9 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         collection = 'vacancies_'+sys.argv[1]
         if len(sys.argv) == 3 and sys.argv[2] == 'eng':
-            top = get_top_words(get_collection_full_text('collection'))
+            top = get_top_words(get_collection_full_text(collection))
         else:
-            top = get_top_words(get_collection_full_text('collection'), eng_only=False)
+            top = get_top_words(get_collection_full_text(collection), eng_only=False)
+
         for word, count in top.most_common(50):
             print(f'{word}: \t{count}')
