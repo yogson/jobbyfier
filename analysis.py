@@ -56,4 +56,4 @@ if __name__ == '__main__':
             top = get_top_words(get_collection_full_text(collection), eng_only=False)
 
         for word, count in top.most_common(50):
-            print(f'{word}: \t{count}')
+            print(f'{word}: \t{count}') if len(word) > 2 else None
