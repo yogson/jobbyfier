@@ -32,7 +32,7 @@ def get_top_words(text):
     def trans(chars):
         return str.maketrans(dict(zip(chars, list(' ' * len(chars)))))
 
-    trans_tab = trans(list(string.punctuation) + list('\r\n«»\–'))
+    trans_tab = trans(list(string.punctuation) + list('\r\n«»\–') + list('АаБбВвГгДдЕеЁёЖжЗзИиЙйКкЛлМмНнОоПпРрСсТтУуФфХхЦцЧчШшЩщЪъЫыЬьЭэЮюЯя'))
 
     df = pd.DataFrame({
         'comm': re.split(r'[\n\r\.\?!]', text)
