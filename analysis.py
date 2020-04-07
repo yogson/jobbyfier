@@ -1,12 +1,12 @@
-import os
+import sys
 import re
-from collections import defaultdict, Counter
 
 import pandas as pd
-import nltk
-from nltk import word_tokenize, sent_tokenize, FreqDist
+from nltk import word_tokenize, FreqDist
 import string
 from pymongo import MongoClient
+
+RUSSIAN_ALPHABET = 'АаБбВвГгДдЕеЁёЖжЗзИиЙйКкЛлМмНнОоПпРрСсТтУуФфХхЦцЧчШшЩщЪъЫыЬьЭэЮюЯя'
 
 client = MongoClient()
 db = client.jobs
@@ -19,7 +19,7 @@ def clean_html(raw_html):
 
 
 def get_collection_full_text(collection_name):
-    collection = db.get_collection('vacancies_'+collection_name)
+    collection = db.get_collection(collection_name)
     qs = collection.find()
     full_text = ''
     for vacancy in qs:
@@ -32,7 +32,7 @@ def get_top_words(text):
     def trans(chars):
         return str.maketrans(dict(zip(chars, list(' ' * len(chars)))))
 
-    trans_tab = trans(list(string.punctuation) + list('\r\n«»\–') + list('АаБбВвГгДдЕеЁёЖжЗзИиЙйКкЛлМмНнОоПпРрСсТтУуФфХхЦцЧчШшЩщЪъЫыЬьЭэЮюЯя'))
+    trans_tab = trans(list(string.punctuation) + list('\r\n«»\–') + list(RUSSIAN_ALPHABET) + list(string.digits))
 
     df = pd.DataFrame({
         'comm': re.split(r'[\n\r\.\?!]', text)
@@ -44,7 +44,9 @@ def get_top_words(text):
     return FreqDist(words)
 
 
-top = get_top_words(get_collection_full_text('python'))
-
-for word, count in top.most_common(50):
-    print(f'{word}: {count}')
+if __name__ == '__main__':
+    if len(sys.argv) == 2:
+        collection = 'vacancies_'+sys.argv[1]
+        top = get_top_words(get_collection_full_text('collection'))
+        for word, count in top.most_common(50):
+            print(f'{word}: \t{count}')
