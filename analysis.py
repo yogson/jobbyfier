@@ -46,4 +46,5 @@ def get_top_words(text):
 
 top = get_top_words(get_collection_full_text('python'))
 
-print(top.most_common(20))
+for word, count in top.most_common(50):
+    print(f'{word}: {count}')
