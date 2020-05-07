@@ -26,8 +26,9 @@ def get_collection_full_text(collection_name, key='description'):
     collection = db.get_collection(collection_name)
     qs = collection.find({}, {key: 1})
     full_text = ''
+
     for vacancy in qs:
-        full_text += '\n'+clean_html(vacancy.get(key))
+        full_text += '\n'+clean_html(vacancy.get(key)) if vacancy.get(key) else ''
     return full_text
 
 
