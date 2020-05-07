@@ -3,12 +3,16 @@ import re
 
 import pandas as pd
 from nltk import word_tokenize, FreqDist
+from nltk.corpus import stopwords
+import itertools
 import string
 from pymongo import MongoClient
 
+from config import STOP_LIST
+
 RUSSIAN_ALPHABET = 'АаБбВвГгДдЕеЁёЖжЗзИиЙйКкЛлМмНнОоПпРрСсТтУуФфХхЦцЧчШшЩщЪъЫыЬьЭэЮюЯя'
 
-client = MongoClient()
+client = MongoClient(['172.19.33.120'])
 db = client.jobs
 
 
@@ -18,12 +22,12 @@ def clean_html(raw_html):
     return cleantext
 
 
-def get_collection_full_text(collection_name):
+def get_collection_full_text(collection_name, key='description'):
     collection = db.get_collection(collection_name)
-    qs = collection.find()
+    qs = collection.find({}, {key: 1})
     full_text = ''
     for vacancy in qs:
-        full_text += '\n'+clean_html(vacancy.get('description'))
+        full_text += '\n'+clean_html(vacancy.get(key))
     return full_text
 
 
@@ -43,8 +47,18 @@ def get_top_words(text, eng_only=True):
     df['comm'] = df['comm'].str.translate(trans_tab).str.lower()
 
     words = [word for word in word_tokenize(df['comm'].str.cat(sep=' '))]
+    words = [word for word in words if word not in itertools.chain(
+        stopwords.words("english"),
+        stopwords.words("russian"),
+        STOP_LIST
+    )]
 
     return FreqDist(words)
+
+
+def get_expirience(text):
+    pass
+
 
 
 if __name__ == '__main__':
@@ -53,7 +67,7 @@ if __name__ == '__main__':
         if len(sys.argv) == 3 and sys.argv[2] == 'eng':
             top = get_top_words(get_collection_full_text(collection))
         else:
-            top = get_top_words(get_collection_full_text(collection), eng_only=False)
+            top = get_top_words(get_collection_full_text(collection, key='description'), eng_only=False)
 
         for word, count in top.most_common(100):
-            print(f'{word}: \t{count}') if len(word) > 2 else None
+            print(f'{word}: \t{count}')

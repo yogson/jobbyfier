@@ -120,7 +120,7 @@ def calculate_all(db, base=None):
 
 if __name__ == '__main__':
 
-    client = MongoClient()
+    client = MongoClient('172.19.33.120')
     db = client.jobs
 
     if len(sys.argv) == 2:
