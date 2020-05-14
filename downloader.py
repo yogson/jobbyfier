@@ -5,7 +5,7 @@ import asyncio
 
 async def fetch(session, url, payload):
     async with session.get(url, params=payload) as response:
-        return response
+        return await response.json()
 
 async def download_vacancies(vacancies, **kwargs):
 
@@ -48,14 +48,10 @@ async def download_vacancies(vacancies, **kwargs):
         async with aiohttp.ClientSession() as session:
             reps.append(await fetch(session, url, payload))
 
-    while reps:
-        if reps[0].status == 200:
-            one = reps.pop(0)
-            vacs = one.json()
-            for vacancy in vacs.get('items', []):
-                vacancies.insert_one(vacancy)
-        else:
-            await asyncio.sleep(0.1)
+    for one in resp:
+        for vacancy in one.get('items', []):
+            vacancies.insert_one(vacancy)
+
 
 
 async def download_single(id):
@@ -76,8 +72,7 @@ async def get_details(collection):
         print(i)
         reps.append(await download_single(id_))
 
-    for one in reps:
-        detailed = await one.json()
+    for detailed in reps:
         description = detailed.get('description')
         if description:
             collection.find_one_and_update(
