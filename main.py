@@ -1,62 +1,10 @@
 from statistics import median
-from time import sleep
+import asyncio
 import sys
 
 from pymongo import MongoClient
-import requests
 
-
-def download_vacancies(collection, page=0, **kwargs):
-
-    only_with_salary = kwargs.get('only_with_salary', True)
-    keyword = kwargs.get('keyword')
-
-    payload = {
-        'User-Agent': 'api-agent',
-        'only_with_salary': 'true' if only_with_salary else 'false',
-        'per_page': 100,
-        'page': page
-    }
-
-    if keyword:
-        payload.update({
-            'text': keyword
-        })
-
-    resp = requests.get(f'https://api.hh.ru/vacancies', params=payload).json()
-
-    print(
-        'Page: ',
-        resp.get('page')
-    )
-
-    for vacancy in resp.get('items', []):
-        vacancies.insert_one(vacancy)
-
-    if page < resp.get('pages', 1)-1:
-        sleep(0.1)
-        download_vacancies(db, page=page+1, **kwargs)
-
-
-def download_single(id):
-    payload = {
-        'User-Agent': 'api-agent'
-    }
-    return requests.get(f'https://api.hh.ru/vacancies/{id}', params=payload).json()
-
-
-def get_details(collection):
-    ids = [i['id'] for i in collection.find({}, {'_id': 0, 'id': 1})]
-    i=0
-    for id_ in ids:
-        i += 1
-        print(i)
-        description = download_single(id_).get('description')
-        if description:
-            collection.find_one_and_update(
-                {'id': id_},
-                {'$set': {'description': description}}
-            )
+from downloader import download_vacancies, get_details
 
 
 def get_salary_averages(vacancies):
@@ -127,7 +75,7 @@ if __name__ == '__main__':
         search_base = f'vacancies_{sys.argv[1].replace(" ", "_")}'
         vacancies = getattr(db, search_base)
         vacancies.delete_many({})
-        download_vacancies(vacancies, keyword=sys.argv[1])
+        asyncio.run(download_vacancies(vacancies, keyword=sys.argv[1]))
         print('Downloading vacancies details...')
         get_details(vacancies)
         calculate_all(db, base=search_base)

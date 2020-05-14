@@ -1,0 +1,63 @@
+import requests
+
+
+async def download_vacancies(vacancies, **kwargs):
+
+    only_with_salary = kwargs.get('only_with_salary', True)
+    keyword = kwargs.get('keyword')
+
+    payload = {
+        'User-Agent': 'api-agent',
+        'only_with_salary': 'true' if only_with_salary else 'false',
+        'per_page': 100,
+        'page': 0
+    }
+
+    if keyword:
+        payload.update({
+            'text': keyword
+        })
+
+    resp = requests.get(f'https://api.hh.ru/vacancies', params=payload).json()
+
+    print(
+        'Page: ',
+        resp.get('page')
+    )
+
+    for vacancy in resp.get('items', []):
+        vacancies.insert_one(vacancy)
+
+    pages_count = resp.get('pages', 1)
+
+    for page in range(1, pages_count):
+        payload.update({
+            'page': page
+        })
+        print('Gone for page #', page)
+        resp = await requests.get(f'https://api.hh.ru/vacancies', params=payload).json()
+
+        for vacancy in resp.get('items', []):
+            vacancies.insert_one(vacancy)
+
+
+async def download_single(id):
+    payload = {
+        'User-Agent': 'api-agent'
+    }
+    return await requests.get(f'https://api.hh.ru/vacancies/{id}', params=payload).json()
+
+
+async def get_details(collection):
+    ids = [i['id'] for i in collection.find({}, {'_id': 0, 'id': 1})]
+    i = 0
+    for id_ in ids:
+        i += 1
+        print(i)
+        detailed = await download_single(id_)
+        description = detailed.get('description')
+        if description:
+            collection.find_one_and_update(
+                {'id': id_},
+                {'$set': {'description': description}}
+            )
