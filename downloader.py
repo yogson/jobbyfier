@@ -48,7 +48,7 @@ async def download_vacancies(vacancies, **kwargs):
             reps.append(await fetch(session, url, payload))
 
     for one in reps:
-        for vacancy in one.json().get('items', []):
+        for vacancy in await one.json().get('items', []):
             vacancies.insert_one(vacancy)
 
 
@@ -71,7 +71,7 @@ async def get_details(collection):
         reps.append(await download_single(id_))
 
     for one in reps:
-        detailed = one.json()
+        detailed = await one.json()
         description = detailed.get('description')
         if description:
             collection.find_one_and_update(
