@@ -48,7 +48,7 @@ async def download_vacancies(vacancies, **kwargs):
             reps.append(await fetch(session, url, payload))
 
     for one in reps:
-        print(one.status)
+        print(one)
             # for vacancy in resp.get('items', []):
             #     vacancies.insert_one(vacancy)
 
