@@ -1,7 +1,14 @@
 import requests
+import aiohttp
 
+
+async def fetch(session, url, payload):
+    async with session.get(url, params=payload) as response:
+        return await response.json()
 
 async def download_vacancies(vacancies, **kwargs):
+
+    url = 'https://api.hh.ru/vacancies'
 
     only_with_salary = kwargs.get('only_with_salary', True)
     keyword = kwargs.get('keyword')
@@ -18,7 +25,7 @@ async def download_vacancies(vacancies, **kwargs):
             'text': keyword
         })
 
-    resp = requests.get(f'https://api.hh.ru/vacancies', params=payload).json()
+    resp = requests.get(url, params=payload).json()
 
     print(
         'Page: ',
@@ -35,10 +42,11 @@ async def download_vacancies(vacancies, **kwargs):
             'page': page
         })
         print('Gone for page #', page)
-        resp = await requests.get(f'https://api.hh.ru/vacancies', params=payload).json()
+        async with aiohttp.ClientSession() as session:
+            resp = await fetch(session, url, payload)
 
-        for vacancy in resp.get('items', []):
-            vacancies.insert_one(vacancy)
+            for vacancy in resp.get('items', []):
+                vacancies.insert_one(vacancy)
 
 
 async def download_single(id):
