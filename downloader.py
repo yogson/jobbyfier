@@ -3,55 +3,54 @@ import aiohttp
 import asyncio
 import json
 
+from time import sleep
+
 
 async def fetch(session, url, payload):
     async with session.get(url, params=payload) as response:
         return await response.json()
 
 async def download_vacancies(vacancies, **kwargs):
+    async with aiohttp.ClientSession() as session:
+        reps = []
 
-    reps = []
+        url = 'https://api.hh.ru/vacancies'
 
-    url = 'https://api.hh.ru/vacancies'
+        only_with_salary = kwargs.get('only_with_salary', True)
+        keyword = kwargs.get('keyword')
 
-    only_with_salary = kwargs.get('only_with_salary', True)
-    keyword = kwargs.get('keyword')
+        payload = {
+            'User-Agent': 'api-agent',
+            'only_with_salary': 'true' if only_with_salary else 'false',
+            'per_page': 100,
+            'page': 0
+        }
 
-    payload = {
-        'User-Agent': 'api-agent',
-        'only_with_salary': 'true' if only_with_salary else 'false',
-        'per_page': 100,
-        'page': 0
-    }
+        if keyword:
+            payload.update({
+                'text': keyword
+            })
 
-    if keyword:
-        payload.update({
-            'text': keyword
-        })
+        reps.append(await fetch(session, url, payload))
 
-    resp = requests.get(url, params=payload).json()
+        print(
+            'Page: ',
+            reps[0].get('page')
+        )
 
-    print(
-        'Page: ',
-        resp.get('page')
-    )
+        pages_count = reps[0].get('pages', 1)
 
-    for vacancy in resp.get('items', []):
-        vacancies.insert_one(vacancy)
-
-    pages_count = resp.get('pages', 1)
-
-    for page in range(1, pages_count):
-        payload.update({
-            'page': page
-        })
-        print('Gone for page #', page)
-        async with aiohttp.ClientSession() as session:
+        for page in range(1, pages_count):
+            payload.update({
+                'page': page
+            })
+            print('Gone for page #', page)
             reps.append(await fetch(session, url, payload))
 
-    for one in resp:
-        for vacancy in json.loads(one).get('items', []):
-            vacancies.insert_one(vacancy)
+        for one in reps:
+            print(one)
+            for vacancy in one.get('items', []):
+                vacancies.insert_one(vacancy)
 
 
 
@@ -74,7 +73,7 @@ async def get_details(collection):
         reps.append(await download_single(id_))
 
     for detailed in reps:
-        description = json.loads(detailed).get('description')
+        description = description.get('description')
         if description:
             collection.find_one_and_update(
                 {'id': id_},
