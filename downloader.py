@@ -73,7 +73,7 @@ async def get_details(collection):
         reps.append(await download_single(id_))
 
     for detailed in reps:
-        description = description.get('description')
+        description = detailed.get('description')
         if description:
             collection.find_one_and_update(
                 {'id': id_},
