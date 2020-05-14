@@ -75,7 +75,7 @@ if __name__ == '__main__':
         search_base = f'vacancies_{sys.argv[1].replace(" ", "_")}'
         vacancies = getattr(db, search_base)
         vacancies.delete_many({})
-        asyncio.run(download_vacancies(vacancies, keyword=sys.argv[1]))
+        asyncio.get_event_loop().run_until_complete(download_vacancies(vacancies, keyword=sys.argv[1]))
         print('Downloading vacancies details...')
         asyncio.run(get_details(vacancies))
         calculate_all(db, base=search_base)

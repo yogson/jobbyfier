@@ -8,6 +8,8 @@ async def fetch(session, url, payload):
 
 async def download_vacancies(vacancies, **kwargs):
 
+    reps = []
+
     url = 'https://api.hh.ru/vacancies'
 
     only_with_salary = kwargs.get('only_with_salary', True)
@@ -43,10 +45,12 @@ async def download_vacancies(vacancies, **kwargs):
         })
         print('Gone for page #', page)
         async with aiohttp.ClientSession() as session:
-            resp = await fetch(session, url, payload)
+            reps.append(await fetch(session, url, payload))
 
-            for vacancy in resp.get('items', []):
-                vacancies.insert_one(vacancy)
+    for one in reps:
+        print(one.status)
+            # for vacancy in resp.get('items', []):
+            #     vacancies.insert_one(vacancy)
 
 
 async def download_single(id):
@@ -59,12 +63,16 @@ async def download_single(id):
 
 
 async def get_details(collection):
+    reps = []
     ids = [i['id'] for i in collection.find({}, {'_id': 0, 'id': 1})]
     i = 0
     for id_ in ids:
         i += 1
         print(i)
-        detailed = await download_single(id_)
+        reps.append(await download_single(id_))
+
+    for one in reps:
+        detailed = one.json()
         description = detailed.get('description')
         if description:
             collection.find_one_and_update(
