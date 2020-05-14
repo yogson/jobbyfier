@@ -4,7 +4,7 @@ import aiohttp
 
 async def fetch(session, url, payload):
     async with session.get(url, params=payload) as response:
-        return await response
+        return response
 
 async def download_vacancies(vacancies, **kwargs):
 
