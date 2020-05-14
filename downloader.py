@@ -4,7 +4,7 @@ import aiohttp
 
 async def fetch(session, url, payload):
     async with session.get(url, params=payload) as response:
-        return response
+        return await response
 
 async def download_vacancies(vacancies, **kwargs):
 
@@ -48,9 +48,8 @@ async def download_vacancies(vacancies, **kwargs):
             reps.append(await fetch(session, url, payload))
 
     for one in reps:
-        print(one.status)
-            # for vacancy in resp.get('items', []):
-            #     vacancies.insert_one(vacancy)
+        for vacancy in one.json().get('items', []):
+            vacancies.insert_one(vacancy)
 
 
 async def download_single(id):
