@@ -53,7 +53,9 @@ async def download_single(id):
     payload = {
         'User-Agent': 'api-agent'
     }
-    return await requests.get(f'https://api.hh.ru/vacancies/{id}', params=payload).json()
+    async with aiohttp.ClientSession() as session:
+
+        return await fetch(session, f'https://api.hh.ru/vacancies/{id}', payload)
 
 
 async def get_details(collection):
