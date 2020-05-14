@@ -77,7 +77,7 @@ if __name__ == '__main__':
         vacancies.delete_many({})
         asyncio.run(download_vacancies(vacancies, keyword=sys.argv[1]))
         print('Downloading vacancies details...')
-        get_details(vacancies)
+        asyncio.run(get_details(vacancies))
         calculate_all(db, base=search_base)
     else:
         calculate_all(db)
