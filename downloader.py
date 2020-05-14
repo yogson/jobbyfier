@@ -1,5 +1,6 @@
 import requests
 import aiohttp
+import asyncio
 
 
 async def fetch(session, url, payload):
@@ -47,9 +48,13 @@ async def download_vacancies(vacancies, **kwargs):
         async with aiohttp.ClientSession() as session:
             reps.append(await fetch(session, url, payload))
 
-    for one in reps:
-        for vacancy in await one.json().get('items', []):
-            vacancies.insert_one(vacancy)
+    while reps:
+        if reps[0].closed:
+            one = reps.pop(0)
+            for vacancy in one.json().get('items', []):
+                vacancies.insert_one(vacancy)
+        else:
+            await asyncio.sleep(0.1)
 
 
 async def download_single(id):
