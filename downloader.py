@@ -1,6 +1,7 @@
 import requests
 import aiohttp
 import asyncio
+import json
 
 
 async def fetch(session, url, payload):
@@ -49,7 +50,7 @@ async def download_vacancies(vacancies, **kwargs):
             reps.append(await fetch(session, url, payload))
 
     for one in resp:
-        for vacancy in one.get('items', []):
+        for vacancy in json.loads(one).get('items', []):
             vacancies.insert_one(vacancy)
 
 
@@ -73,7 +74,7 @@ async def get_details(collection):
         reps.append(await download_single(id_))
 
     for detailed in reps:
-        description = detailed.get('description')
+        description = json.loads(detailed).get('description')
         if description:
             collection.find_one_and_update(
                 {'id': id_},
