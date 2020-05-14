@@ -49,9 +49,9 @@ async def download_vacancies(vacancies, **kwargs):
             reps.append(await fetch(session, url, payload))
 
     while reps:
-        if reps[0].closed:
+        if reps[0].status == 200:
             one = reps.pop(0)
-            for vacancy in one.json().get('items', []):
+            for vacancy in await one.json().get('items', []):
                 vacancies.insert_one(vacancy)
         else:
             await asyncio.sleep(0.1)
