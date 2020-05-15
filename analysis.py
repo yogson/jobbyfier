@@ -1,5 +1,6 @@
 import sys
 import re
+import time
 
 import pandas as pd
 from nltk import word_tokenize, FreqDist
@@ -33,28 +34,44 @@ def get_collection_full_text(collection_name, key='description'):
 
 
 def get_top_words(text, eng_only=True):
+    start_time = time.time()
 
     def trans(chars):
         return str.maketrans(dict(zip(chars, list(' ' * len(chars)))))
 
     if eng_only:
         trans_tab = trans(list(string.punctuation) + list('\r\n«»\–') + list(RUSSIAN_ALPHABET) + list(string.digits))
+        print('trans', time.time() - start_time)
+        start_time = time.time()
     else:
         trans_tab = trans(list(string.punctuation) + list('\r\n«»\–'))
+        print('trans', time.time() - start_time)
+        start_time = time.time()
 
     df = pd.DataFrame({
         'comm': re.split(r'[\n\r\.\?!]', text)
     })
+    print('df', time.time() - start_time)
+    start_time = time.time()
     df['comm'] = df['comm'].str.translate(trans_tab).str.lower()
+    print('df_comm', time.time() - start_time)
+    start_time = time.time()
 
     words = [word for word in word_tokenize(df['comm'].str.cat(sep=' '))]
+    print('word_tokenize', time.time() - start_time)
+    start_time = time.time()
     words = [word for word in words if word not in itertools.chain(
         stopwords.words("english"),
         stopwords.words("russian"),
         STOP_LIST
     )]
+    print('word_stopwords', time.time() - start_time)
+    start_time = time.time()
 
-    return FreqDist(words)
+    fd = FreqDist(words)
+    print('FreqDist', time.time() - start_time)
+
+    return fd
 
 
 def get_expirience(text):
