@@ -1,6 +1,7 @@
 import sys
 import re
 import time
+import multiprocessing
 
 import pandas as pd
 from nltk import word_tokenize, FreqDist
@@ -33,6 +34,29 @@ def get_collection_full_text(collection_name, key='description'):
     return full_text
 
 
+def tokenize(frame, return_list: list):
+    return_list.append(word_tokenize(frame))
+
+
+def multi_tokenizer(df):
+
+    df_part = len(df)//8
+
+    manager = multiprocessing.Manager()
+    return_list = manager.list()
+    jobs = []
+    for i in range(0, 7):
+        part = df[i*df_part: (i+1)*df_part]
+        proc = multiprocessing.Process(target=tokenize, args=(part, return_list))
+        jobs.append(proc)
+        proc.start()
+
+    for proc in jobs:
+        proc.join()
+
+    return itertools.chain.from_iterable(return_list)
+
+
 def get_top_words(text, eng_only=True):
     start_time = time.time()
 
@@ -57,7 +81,8 @@ def get_top_words(text, eng_only=True):
     print('df_comm', time.time() - start_time)
     start_time = time.time()
 
-    tokenized = word_tokenize(df['comm'].str.cat(sep=' '))
+    tokenized = multi_tokenizer(df['comm'].str.cat(sep=' '))
+
     print('tokenized', time.time() - start_time)
     start_time = time.time()
 
