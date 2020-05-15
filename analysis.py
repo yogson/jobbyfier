@@ -46,7 +46,10 @@ def multi_tokenizer(df):
     return_list = manager.list()
     jobs = []
     for i in range(0, 7):
-        part = df[i*df_part: (i+1)*df_part]
+        if i == 7:
+            part = df[i*df_part: ]
+        else:
+            part = df[i*df_part: (i+1)*df_part]
         proc = multiprocessing.Process(target=tokenize, args=(part, return_list))
         jobs.append(proc)
         proc.start()
