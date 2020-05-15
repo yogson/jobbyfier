@@ -69,13 +69,13 @@ async def get_details(collection):
     i = 0
     for id_ in ids:
         i += 1
-        print(i)
+        print(i, id_)
         reps.append(await download_single(id_))
 
     for detailed in reps:
         description = detailed.get('description')
         if description:
             collection.find_one_and_update(
-                {'id': id_},
+                {'id': detailed.get('id')},
                 {'$set': {'description': description}}
             )
