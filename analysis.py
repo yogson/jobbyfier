@@ -57,8 +57,12 @@ def get_top_words(text, eng_only=True):
     print('df_comm', time.time() - start_time)
     start_time = time.time()
 
-    words = [word for word in word_tokenize(df['comm'].str.cat(sep=' '))]
-    print('word_tokenize', time.time() - start_time)
+    tokenized = word_tokenize(df['comm'].str.cat(sep=' '))
+    print('tokenized', time.time() - start_time)
+    start_time = time.time()
+
+    words = [word for word in tokenized]
+    print('words_tokenized', time.time() - start_time)
     start_time = time.time()
     stop_words = list(itertools.chain(
         stopwords.words("english"),
@@ -66,7 +70,7 @@ def get_top_words(text, eng_only=True):
         STOP_LIST
     ))
     words = [word for word in words if word not in stop_words]
-    print('word_stopwords', time.time() - start_time)
+    print('words_stopwords', time.time() - start_time)
     start_time = time.time()
 
     fd = FreqDist(words)
