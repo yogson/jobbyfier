@@ -1,5 +1,5 @@
 
-CORES_TO_USE = 8
+CORES_TO_USE = 4
 
 STOP_LIST = [
     '—',

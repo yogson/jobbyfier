@@ -1,3 +1,4 @@
+import time
 from statistics import median
 import asyncio
 import sys
@@ -67,6 +68,7 @@ def calculate_all(db, base=None):
 
 
 if __name__ == '__main__':
+    start_time = time.time()
 
     client = MongoClient('172.19.33.120')
     db = client.jobs
@@ -82,4 +84,5 @@ if __name__ == '__main__':
     else:
         calculate_all(db)
 
+    print('Total time:', time.time() - start_time)
 

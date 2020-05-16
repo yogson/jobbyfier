@@ -150,4 +150,4 @@ if __name__ == '__main__':
 
         for word, count in top.most_common(100):
             print(f'{word}: \t{count}')
-        print('Total', time.time() - start_time)
+        print('Total time:', time.time() - start_time)
