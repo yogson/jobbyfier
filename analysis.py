@@ -10,7 +10,7 @@ import itertools
 import string
 from pymongo import MongoClient
 
-from config import STOP_LIST
+from config import STOP_LIST, CORES_TO_USE
 
 RUSSIAN_ALPHABET = 'АаБбВвГгДдЕеЁёЖжЗзИиЙйКкЛлМмНнОоПпРрСсТтУуФфХхЦцЧчШшЩщЪъЫыЬьЭэЮюЯя'
 
@@ -24,14 +24,39 @@ def clean_html(raw_html):
     return cleantext
 
 
-def get_collection_full_text(collection_name, key='description'):
+def get_collection_full_text(collection_name=None, key='description', parts=None):
+
     collection = db.get_collection(collection_name)
     qs = collection.find({}, {key: 1})
     full_text = ''
 
-    for vacancy in qs:
-        full_text += '\n'+clean_html(vacancy.get(key)) if vacancy.get(key) else ''
-    return full_text
+    if parts:
+        queryset_len = collection.count_documents({})
+        part_size = queryset_len//parts
+        parts_list = []
+
+        for i in range(0, parts-1):
+
+            if i == parts-1:
+                full_text = ''
+                for vacancy in qs[i*part_size: ]:
+                    full_text += '\n'+clean_html(vacancy.get(key)) if vacancy.get(key) else ''
+                parts_list.append(full_text)
+            else:
+                full_text = ''
+                for vacancy in qs[i*part_size: (i+1)*part_size]:
+                    full_text += '\n'+clean_html(vacancy.get(key)) if vacancy.get(key) else ''
+                parts_list.append(full_text)
+                qs.rewind()
+
+        return parts_list
+
+    else:
+
+        for vacancy in qs:
+            full_text += '\n'+clean_html(vacancy.get(key)) if vacancy.get(key) else ''
+
+        return [full_text]
 
 
 def tokenize(frame, return_list: list):
@@ -60,50 +85,35 @@ def multi_tokenizer(df):
     return itertools.chain.from_iterable(return_list)
 
 
-def get_top_words(text, eng_only=True):
-    start_time = time.time()
+def get_top_words(text=None, result_list=None, eng_only=None):
+
     def trans(chars):
         return str.maketrans(dict(zip(chars, list(' ' * len(chars)))))
 
     if eng_only:
         trans_tab = trans(list(string.punctuation) + list('\r\n«»\–') + list(RUSSIAN_ALPHABET) + list(string.digits))
-        print('trans', time.time() - start_time)
-        start_time = time.time()
+
     else:
         trans_tab = trans(list(string.punctuation) + list('\r\n«»\–'))
-        print('trans', time.time() - start_time)
-        start_time = time.time()
+
 
     df = pd.DataFrame({
         'comm': re.split(r'[\n\r\.\?!]', text)
     })
-    print('df', time.time() - start_time)
-    start_time = time.time()
+
     df['comm'] = df['comm'].str.translate(trans_tab).str.lower()
-    print('df_comm', time.time() - start_time)
-    start_time = time.time()
 
-    tokenized = multi_tokenizer(df['comm'].str.cat(sep=' '))
-
-    print('tokenized', time.time() - start_time)
-    start_time = time.time()
+    tokenized = word_tokenize(df['comm'].str.cat(sep=' '))
 
     words = [word for word in tokenized]
-    print('words_tokenized', time.time() - start_time)
-    start_time = time.time()
+
     stop_words = list(itertools.chain(
         stopwords.words("english"),
         stopwords.words("russian"),
         STOP_LIST
     ))
-    words = [word for word in words if word not in stop_words]
-    print('words_stopwords', time.time() - start_time)
-    start_time = time.time()
 
-    fd = FreqDist(words)
-    print('FreqDist', time.time() - start_time)
-
-    return fd
+    result_list.append([word for word in words if word not in stop_words])
 
 
 def get_expirience(text):
@@ -113,11 +123,30 @@ def get_expirience(text):
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         start_time = time.time()
+
         collection = 'vacancies_'+sys.argv[1]
+        text_list = get_collection_full_text(collection, key='description', parts=CORES_TO_USE)
+
         if len(sys.argv) == 3 and sys.argv[2] == 'eng':
-            top = get_top_words(get_collection_full_text(collection))
+            eng_only = True
         else:
-            top = get_top_words(get_collection_full_text(collection, key='description'), eng_only=False)
+            eng_only = False
+
+        manager = multiprocessing.Manager()
+        result_list = manager.list()
+        jobs = []
+        for text in text_list:
+            proc = multiprocessing.Process(
+                target=get_top_words,
+                kwargs={'text': text, 'result_list': result_list, 'eng_only': eng_only}
+            )
+            jobs.append(proc)
+            proc.start()
+
+        for proc in jobs:
+            proc.join()
+
+        top = FreqDist(itertools.chain.from_iterable(result_list))
 
         for word, count in top.most_common(100):
             print(f'{word}: \t{count}')
