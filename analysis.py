@@ -47,7 +47,7 @@ def multi_tokenizer(df):
     jobs = []
     for i in range(0, 7):
         if i == 7:
-            part = df[i*df_part: ]
+            part = df[i*df_part:]
         else:
             part = df[i*df_part: (i+1)*df_part]
         proc = multiprocessing.Process(target=tokenize, args=(part, return_list))
@@ -62,7 +62,6 @@ def multi_tokenizer(df):
 
 def get_top_words(text, eng_only=True):
     start_time = time.time()
-
     def trans(chars):
         return str.maketrans(dict(zip(chars, list(' ' * len(chars)))))
 
@@ -111,9 +110,9 @@ def get_expirience(text):
     pass
 
 
-
 if __name__ == '__main__':
     if len(sys.argv) > 1:
+        start_time = time.time()
         collection = 'vacancies_'+sys.argv[1]
         if len(sys.argv) == 3 and sys.argv[2] == 'eng':
             top = get_top_words(get_collection_full_text(collection))
@@ -122,3 +121,4 @@ if __name__ == '__main__':
 
         for word, count in top.most_common(100):
             print(f'{word}: \t{count}')
+        print('Total', time.time() - start_time)
