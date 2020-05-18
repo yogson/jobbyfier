@@ -151,6 +151,6 @@ if __name__ == '__main__':
 
     top = FreqDist(itertools.chain.from_iterable(result_list))
 
-    for word, count in top.most_common(100):
+    for word, count in top.most_common(args.n):
         print(f'{word}: \t{count}')
     print('Total time:', time.time() - start_time)
