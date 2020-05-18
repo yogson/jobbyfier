@@ -68,13 +68,17 @@ def calculate_all(db, base=None):
 
 
 if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser('Download vacancies and/or calculate salaries')
+    parser.add_argument('-s', type=str, help='Vacancies search base')
+    args = parser.parse_args()
     start_time = time.time()
 
     client = MongoClient('172.19.33.120')
     db = client.jobs
 
-    if len(sys.argv) == 2:
-        search_base = f'vacancies_{sys.argv[1].replace(" ", "_")}'
+    if args.s:
+        search_base = f'vacancies_{args.s.replace(" ", "_")}'
         vacancies = getattr(db, search_base)
         vacancies.delete_many({})
         asyncio.get_event_loop().run_until_complete(download_vacancies(vacancies, keyword=sys.argv[1]))

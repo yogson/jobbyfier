@@ -121,33 +121,36 @@ def get_expirience(text):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        start_time = time.time()
 
-        collection = 'vacancies_'+sys.argv[1]
-        text_list = get_collection_full_text(collection, key='description', parts=CORES_TO_USE)
+    import argparse
+    parser = argparse.ArgumentParser('Analyze vacancies and return top-N occurring words')
+    parser.add_argument('keyword', type=str, help='Vacancies search base')
+    parser.add_argument('-n', type=int, default=100, help='The N value')
+    parser.add_argument('-eng', action='store_true', default=False, help='English words only')
+    parser.add_argument('-cores', type=int, default=None, help='CPU cores to use for computations')
+    args = parser.parse_args()
 
-        if len(sys.argv) == 3 and sys.argv[2] == 'eng':
-            eng_only = True
-        else:
-            eng_only = False
+    start_time = time.time()
 
-        manager = multiprocessing.Manager()
-        result_list = manager.list()
-        jobs = []
-        for text in text_list:
-            proc = multiprocessing.Process(
-                target=get_top_words,
-                kwargs={'text': text, 'result_list': result_list, 'eng_only': eng_only}
-            )
-            jobs.append(proc)
-            proc.start()
+    collection = 'vacancies_'+args.keyword
+    text_list = get_collection_full_text(collection, key='description', parts=args.cores or CORES_TO_USE)
 
-        for proc in jobs:
-            proc.join()
+    manager = multiprocessing.Manager()
+    result_list = manager.list()
+    jobs = []
+    for text in text_list:
+        proc = multiprocessing.Process(
+            target=get_top_words,
+            kwargs={'text': text, 'result_list': result_list, 'eng_only': args.eng}
+        )
+        jobs.append(proc)
+        proc.start()
 
-        top = FreqDist(itertools.chain.from_iterable(result_list))
+    for proc in jobs:
+        proc.join()
 
-        for word, count in top.most_common(100):
-            print(f'{word}: \t{count}')
-        print('Total time:', time.time() - start_time)
+    top = FreqDist(itertools.chain.from_iterable(result_list))
+
+    for word, count in top.most_common(100):
+        print(f'{word}: \t{count}')
+    print('Total time:', time.time() - start_time)
